@@ -10,8 +10,7 @@ const port = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 
-
-const uri = "mongodb+srv://UserInfo:<password>@cluster0.2ltpfdm.mongodb.net/?retryWrites=true&w=majority";
+const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@cluster0.2ltpfdm.mongodb.net/?retryWrites=true&w=majority`;
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(uri, {
@@ -24,13 +23,31 @@ const client = new MongoClient(uri, {
 
 async function run() {
   try {
-
+    await client.connect();
     const userCollection = client.db("UsersInfo").collection("users");
 
+    app.get("/users", async (req, res) => {
+      try {
+        const result = await userCollection.find().toArray();
+        res.send(result);
+      } catch (error) {
+        console.error('Error fetching users:', error);
+        res.status(500).send('Internal Server Error');
+      }
+    });
 
-
-
-
+    app.post("/users", async (req, res) => {
+        try {
+          const newUser = req.body;
+          console.log(newUser);
+          const result = await userCollection.insertOne(newUser);
+          res.send(result);
+        } catch (error) {
+          console.error('Error adding user:', error);
+          res.status(500).send('Internal Server Error');
+        }
+      });
+      
 
 
 
@@ -68,11 +85,13 @@ async function run() {
     // await client.close();
   }
 }
+
 run().catch(console.dir);
+
 app.get("/", (req, res) => {
-    res.send("Restaurant is Open now!");
-  });
-  app.listen(port, () => {
-    console.log(`Bistro Boss is sitting on port`, port);
-  });
-  
+  res.send("Users are online!");
+});
+
+app.listen(port, () => {
+  console.log(`Users are sitting on port`, port);
+});
