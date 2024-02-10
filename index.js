@@ -1,4 +1,4 @@
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId  } = require('mongodb');
 
 const express = require("express");
 const cors = require("cors");
@@ -23,7 +23,7 @@ const client = new MongoClient(uri, {
 
 async function run() {
   try {
-    await client.connect();
+    // await client.connect();
     const userCollection = client.db("UsersInfo").collection("users");
 
     app.get("/users", async (req, res) => {
@@ -48,6 +48,28 @@ async function run() {
         }
       });
       
+     app.get("/users/:userId", async (req, res) => {
+  const { userId } = req.params;
+  console.log('Received userId:', userId);
+
+  try {
+    const result = await userCollection.findOne({ _id: new ObjectId(userId) });
+    console.log('User details result:', result);
+
+    if (result) {
+      res.send(result);
+    } else {
+      res.status(404).json({ error: 'User not found' });
+    }
+  } catch (error) {
+    console.error('Error fetching user details:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+      
+      
+        
 
 
 
